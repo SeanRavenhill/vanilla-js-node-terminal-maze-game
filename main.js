@@ -36,19 +36,17 @@ const myField = new Field([
     ['O', '░', '░', '^', '░', '░', '░', 'O', 'O', 'O']
 ]);
 
-
-let gameState = 'play';
-
 const getUserInput = () => {
     let direction = '';
     const validInputs = ['u', 'd', 'l', 'r'];
+    
     while (!validInputs.includes(direction)) {
-        console.log('Use inputs of (u = up), (d = down), (l = left), (r = right)');
+        console.log(`Use inputs of ('u' = up), ('d' = down), ('l' = left) or ('r' = right)`);
         direction = prompt('Which way? ');
         console.clear();
         if (!validInputs.includes(direction)) {
             myField.print();
-            console.log("Invalid input. Please enter 'u', 'd', 'l', or 'r'.");
+            console.log(`Invalid input.`);
         } else {
             myField.print();
             return direction;
@@ -56,8 +54,13 @@ const getUserInput = () => {
     }
 }
 
+const userInput = direction => {
+    console.log(direction);
+}
+
 myField.print();
 
 while (myField.gameState) {
-    console.log(getUserInput());
+    const input = getUserInput();
+    userInput(input);
 }
