@@ -4,11 +4,13 @@ const hat = '^';
 const hole = 'O';
 const fieldCharacter = '░';
 const pathCharacter = '*';
+const validInputs = ['u', 'd', 'l', 'r'];
 
 class Field {
-    constructor(fieldArray, gameState = true) {
+    constructor(fieldArray) {
         this._fieldArray = fieldArray;
-        this._gameState = gameState;
+        this._gameState = true;
+        this._initIndex = [0, 0];
     }
 
     get gameState() {
@@ -20,6 +22,27 @@ class Field {
         this._fieldArray.forEach(arr => arrString += arr.join('') + '\n');
         arrString += '----------\n';
         console.log(arrString);
+    }
+
+    movePlayer(direction) {
+        let playerPosition = this._initIndex;
+
+        switch (direction) {
+            case 'r':
+                playerPosition[1]++;
+                break;
+            case 'l':
+                playerPosition[1]--;
+                break;
+            case 'u':
+                playerPosition[0]--;
+                break;
+            case 'd':
+                playerPosition[0]++;
+                break;
+        }
+          
+        return this._initIndex;       
     }
 }
 
@@ -38,8 +61,7 @@ const myField = new Field([
 
 const getUserInput = () => {
     let direction = '';
-    const validInputs = ['u', 'd', 'l', 'r'];
-    
+
     while (!validInputs.includes(direction)) {
         console.log(`Use inputs of ('u' = up), ('d' = down), ('l' = left) or ('r' = right)`);
         direction = prompt('Which way? ');
@@ -54,13 +76,10 @@ const getUserInput = () => {
     }
 }
 
-const userInput = direction => {
-    console.log(direction);
-}
-
 myField.print();
 
+// While loop handles the game and gamestate.
 while (myField.gameState) {
-    const input = getUserInput();
-    userInput(input);
+    const direction = getUserInput();
+    myField.movePlayer(direction);
 }
