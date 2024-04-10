@@ -1,27 +1,37 @@
 const prompt = require('prompt-sync')({ sigint: true });
 
-const hat = '^';
-const hole = 'O';
-const fieldCharacter = '░';
-const pathCharacter = '*';
+const hatIcon = '^';
+const holeIcon = 'O';
+const fieldIcon = '░';
+const playerIcon = '*';
 const validInputs = ['u', 'd', 'l', 'r'];
 
-class Field {
+class mazeGame {
     constructor(fieldArray) {
         this._fieldArray = fieldArray;
         this._gameState = true;
         this._initIndex = [0, 0];
     }
 
-    get gameState() {
-        return this._gameState;
+    print() {
+        const border = '-'.repeat(this._fieldArray[0].length + 2); // +2 for padding or as needed
+        console.log(`${border}\n${this._fieldArray.map(arr => `|${arr.join('')}|`).join('\n')}\n${border}`);
     }
 
-    print() {
-        let arrString = '----------\n';
-        this._fieldArray.forEach(arr => arrString += arr.join('') + '\n');
-        arrString += '----------\n';
-        console.log(arrString);
+    getUserInput() {
+        const gameInstructions = `Use inputs of ('u' = up), ('d' = down), ('l' = left) or ('r' = right)`;
+        const askDirection = 'Which way? ';
+        const invalidInputMessage = 'Invalid input.';
+        let direction = '';
+    
+        while (!validInputs.includes(direction)) {
+            console.log(gameInstructions);
+            direction = prompt(askDirection);
+            if (!validInputs.includes(direction)) {
+                console.log(invalidInputMessage);
+            }
+        }
+        return direction;
     }
 
     movePlayer(direction) {
@@ -56,11 +66,11 @@ class Field {
         
         const gridSymbol = this._fieldArray[y_index][x_index];
 
-        if (gridSymbol === hole) {
+        if (gridSymbol === holeIcon) {
             return {valid: false, message: 'You fell in a hole! Game Over!'};
         }
 
-        if (gridSymbol === hat) {
+        if (gridSymbol === hatIcon) {
             return {valid: false, message: 'Congrats you found your hat!'};
         }
 
@@ -73,13 +83,23 @@ class Field {
             console.log(validationResults.message);
         } else {
             const [y_index, x_index] = coordinates;
-            this._fieldArray[y_index][x_index] = pathCharacter;
-            this.print
+            this._fieldArray[y_index][x_index] = playerIcon;
+        }
+    }
+
+    playGame() {
+        while (this._gameState) {
+            console.clear();
+            this.print();
+            const direction = this.getUserInput();
+            const coordinates = this.movePlayer(direction);
+            const validationResults = this.moveValidation(coordinates);
+            this.moveAction(validationResults, coordinates); 
         }
     }
 }
 
-const myField = new Field([
+const game = new mazeGame([
     ['*', '░', '░', '░', 'O', 'O', 'O', '░', '░', 'O'],
     ['O', 'O', 'O', '░', 'O', '░', '░', '░', '░', 'O'],
     ['░', '░', '░', '░', '░', '░', 'O', 'O', '░', 'O'],
@@ -92,28 +112,4 @@ const myField = new Field([
     ['O', '░', '░', '^', '░', '░', '░', 'O', 'O', 'O']
 ]);
 
-const getUserInput = () => {
-    let direction = '';
-
-    while (!validInputs.includes(direction)) {
-        console.log(`Use inputs of ('u' = up), ('d' = down), ('l' = left) or ('r' = right)`);
-        direction = prompt('Which way? ');
-        console.clear();
-        if (!validInputs.includes(direction)) {
-            myField.print();
-            console.log(`Invalid input.`);
-        } else {
-            myField.print();
-            return direction;
-        }
-    }
-}
-
-myField.print();
-// While loop handles the game and gamestate.
-while (myField.gameState) {
-    const direction = getUserInput();
-    const coordinates = myField.movePlayer(direction);
-    const validationResults = myField.moveValidation(coordinates);
-    myField.moveAction(validationResults, coordinates); 
-}
+game.playGame();
