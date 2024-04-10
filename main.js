@@ -6,7 +6,7 @@ const fieldIcon = '░';
 const playerIcon = '*';
 const validInputs = ['u', 'd', 'l', 'r'];
 
-class mazeGame {
+class MazeGame {
     constructor(fieldArray) {
         this._fieldArray = fieldArray;
         this._gameState = true;
@@ -56,15 +56,15 @@ class mazeGame {
     }
 
     moveValidation(coordinates) {
-        const [y_index, x_index] = coordinates;
+        const [yIndex, xIndex] = coordinates;
         const matrixGridX = this._fieldArray[0].length;
         const matrixGridY = this._fieldArray.length;
 
-        if (y_index < 0 || y_index >= matrixGridY || x_index < 0 || x_index >= matrixGridX) {
+        if (yIndex < 0 || yIndex >= matrixGridY || xIndex < 0 || xIndex >= matrixGridX) {
             return {valid: false, message: 'Out of Bounds! Game Over!'}; 
         } 
         
-        const gridSymbol = this._fieldArray[y_index][x_index];
+        const gridSymbol = this._fieldArray[yIndex][xIndex];
 
         if (gridSymbol === holeIcon) {
             return {valid: false, message: 'You fell in a hole! Game Over!'};
@@ -82,8 +82,8 @@ class mazeGame {
             this._gameState = false;
             console.log(validationResults.message);
         } else {
-            const [y_index, x_index] = coordinates;
-            this._fieldArray[y_index][x_index] = playerIcon;
+            const [yIndex, xIndex] = coordinates;
+            this._fieldArray[yIndex][xIndex] = playerIcon;
         }
     }
 
@@ -97,9 +97,50 @@ class mazeGame {
             this.moveAction(validationResults, coordinates); 
         }
     }
+
+    generateMaze(height, width, holesPercentage) {
+        console.log(`Height: ${height} | Width: ${width} | Holes Percentage: ${holesPercentage}%`);
+        
+        let mazeArray = [];
+        
+        for (let i = 0; i < height; i++) {
+            let row = [];
+            for (let j = 0; j < width; j++) {
+                // Determine if this cell should be a hole based on holesPercentage
+                const isHole = Math.random() < holesPercentage / 100;
+                row.push(isHole ? holeIcon : fieldIcon); // Use holeIcon or fieldIcon based on the isHole condition
+            }
+            mazeArray.push(row);
+        }
+
+        // Generate random coordinates for player icon
+        const playerIndexX = Math.floor(Math.random() * width);
+        const playerIndexY = Math.floor(Math.random() * height);
+
+        mazeArray[playerIndexY][playerIndexX] = playerIcon;
+        
+        // Generate random coordinates for hat icon
+        let hatIndexX, hatIndexY;
+        do {
+            hatIndexX = Math.floor(Math.random() * width);
+            hatIndexY = Math.floor(Math.random() * width);
+        } while (hatIndexX === playerIndexX && hatIndexY === playerIndexY);
+
+        mazeArray[hatIndexY][hatIndexX] = hatIcon;
+
+        // Adjust the border to match the updated logic
+        const border = '-'.repeat(width + 2); // +2 for side borders
+        console.log(`${border}\n${mazeArray.map(arr => `|${arr.join('')}|`).join('\n')}\n${border}`);
+        console.log()
+    }    
 }
 
-const game = new mazeGame([
+const testGame = new MazeGame([]);
+testGame.generateMaze(10, 10, 15);
+
+// working game state.
+/*
+const game = new MazeGame([
     ['*', '░', '░', '░', 'O', 'O', 'O', '░', '░', 'O'],
     ['O', 'O', 'O', '░', 'O', '░', '░', '░', '░', 'O'],
     ['░', '░', '░', '░', '░', '░', 'O', 'O', '░', 'O'],
@@ -113,3 +154,4 @@ const game = new mazeGame([
 ]);
 
 game.playGame();
+*/
