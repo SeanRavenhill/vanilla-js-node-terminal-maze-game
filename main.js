@@ -41,8 +41,41 @@ class Field {
                 playerPosition[0]++;
                 break;
         }
-          
+
         return this._initIndex;       
+    }
+
+    moveValidation(coordinates) {
+        const [y_index, x_index] = coordinates;
+        const matrixGridX = this._fieldArray[0].length;
+        const matrixGridY = this._fieldArray.length;
+
+        if (y_index < 0 || y_index >= matrixGridY || x_index < 0 || x_index >= matrixGridX) {
+            return {valid: false, message: 'Out of Bounds! Game Over!'}; 
+        } 
+        
+        const gridSymbol = this._fieldArray[y_index][x_index];
+
+        if (gridSymbol === hole) {
+            return {valid: false, message: 'You fell in a hole! Game Over!'};
+        }
+
+        if (gridSymbol === hat) {
+            return {valid: false, message: 'Congrats you found your hat!'};
+        }
+
+        return {valid: true ,message: ''}; 
+    }
+
+    moveAction(validationResults, coordinates) {
+        if (!validationResults.valid) {
+            this._gameState = false;
+            console.log(validationResults.message);
+        } else {
+            const [y_index, x_index] = coordinates;
+            this._fieldArray[y_index][x_index] = pathCharacter;
+            this.print
+        }
     }
 }
 
@@ -77,9 +110,10 @@ const getUserInput = () => {
 }
 
 myField.print();
-
 // While loop handles the game and gamestate.
 while (myField.gameState) {
     const direction = getUserInput();
-    myField.movePlayer(direction);
+    const coordinates = myField.movePlayer(direction);
+    const validationResults = myField.moveValidation(coordinates);
+    myField.moveAction(validationResults, coordinates); 
 }
