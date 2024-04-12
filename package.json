@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "A terminal maze-solving game.",
   "main": "main.js",
-  "author": "Codecademy",
-  "license": "ISC",
+  "author": "Sean Ravenhill",
+  "license": "MIT",
   "dependencies": {
     "prompt-sync": "^4.1.7"
   }
