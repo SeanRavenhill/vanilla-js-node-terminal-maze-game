@@ -9,17 +9,20 @@ const playerIcon = '*'; // Represents the player's current position in the maze.
 // List of valid commands that the player can input to navigate through the maze.
 const validInputs = ['u', 'd', 'l', 'r']; // Correspond to up, down, left, and right movements.
 
+const gameStartMessage = `Maze Game is a simple terminal-based game where a 
+player navigates a maze filled with hazards (holes) to find a hat. 
+The player can move up, down, left, or right with the goal of reaching 
+the hat without falling into any holes.`
+
 class MazeGame {
     constructor(fieldArray) {
         this._fieldArray = fieldArray; // 2D array representing the game field.
         this._gameState = true; // Boolean flag to control the ongoing state of the game.
-        this._initIndex = [0, 0]; // Initial position of the player on the game field.
+        this._playerCoordinates = [0, 0]; // Initial position of the player on the game field.
     }
 
     // Method to generate a maze with random placements of holes, player, and the hat.
     generateMaze(height, width, holesPercentage) {
-        console.log(`Height: ${height} | Width: ${width} | Holes Percentage: ${holesPercentage}%`);
-        
         let mazeArray = [];
         
         // Populate the maze with holes and field spaces based on the specified percentage.
@@ -65,14 +68,17 @@ class MazeGame {
         } while ((hatIndexX === playerIndexX && hatIndexY === playerIndexY) || mazeArray[hatIndexY][hatIndexX] === holeIcon);
     
         mazeArray[hatIndexY][hatIndexX] = hatIcon; // Place the hat in the maze.
-    
-        // Print the generated maze with borders
-        const border = '-'.repeat(width + 2);
-        console.log(`${border}\n${mazeArray.map(arr => `|${arr.join('')}|`).join('\n')}\n${border}`);
-    }   
+        this._fieldArray = mazeArray; // Update 2D array representing the game field.
+        this._playerCoordinates = [playerIndexY, playerIndexX]; // Update initial position of the player on the game field.
+    }
+
+    clearConsole() {
+        process.stdout.write('\x1Bc'); // This escape character clears the console.
+    }
 
     // Method to print the current state of the maze with a border.
     print() {
+        //this.clearConsole();
         // Creates a border based on the width of the maze.
         const border = '-'.repeat(this._fieldArray[0].length + 2);
         // Maps each row of the field to a string and joins them with newline characters.
@@ -100,7 +106,7 @@ class MazeGame {
 
     // Updates the player's position based on the input direction.
     movePlayer(direction) {
-        let playerPosition = this._initIndex;
+        let playerPosition = this._playerCoordinates;
 
         // Adjusts playerPosition based on the direction.
         switch (direction) {
@@ -110,7 +116,7 @@ class MazeGame {
             case 'd': playerPosition[0]++; break;
         }
 
-        return this._initIndex;
+        return this._playerCoordinates;
     }
 
     // Validates the player's new position after a move attempt.
@@ -146,8 +152,8 @@ class MazeGame {
 
     // Main game loop.
     playGame() {
+        console.log(gameStartMessage);
         while (this._gameState) {
-            console.clear();
             this.print();
             const direction = this.getUserInput();
             const coordinates = this.movePlayer(direction);
@@ -157,23 +163,9 @@ class MazeGame {
     } 
 }
 
+
 // Example of generating and playing the game.
+
 const testGame = new MazeGame([]);
 testGame.generateMaze(10, 10, 15); // Generates a 10x10 maze with 15% holes.
-
-// Uncomment to play the game with a predefined field.
-/*
-const game = new MazeGame([
-    ['*', '░', '░', '░', 'O', 'O', 'O', '░', '░', 'O'],
-    ['O', 'O', 'O', '░', 'O', '░', '░', '░', '░', 'O'],
-    ['░', '░', '░', '░', '░', '░', 'O', 'O', '░', 'O'],
-    ['░', 'O', 'O', 'O', 'O', '░', 'O', '░', '░', '░'],
-    ['░', '░', '░', '░', '░', '░', 'O', '░', 'O', 'O'],
-    ['O', 'O', 'O', 'O', '░', 'O', 'O', '░', 'O', '░'],
-    ['░', '░', '░', '░', '░', '░', '░', '░', 'O', '░'],
-    ['O', 'O', 'O', 'O', 'O', 'O', '░', 'O', 'O', '░'],
-    ['O', '░', '░', '░', '░', '░', '░', '░', '░', '░'],
-    ['O', '░', '░', '^', '░', '░', '░', 'O', 'O', 'O']
-]);
-game.playGame();
-*/
+testGame.playGame();
