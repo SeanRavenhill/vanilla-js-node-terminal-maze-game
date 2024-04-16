@@ -6,24 +6,15 @@ const hatIcon = '^';  // Represents the goal (hat) the player aims to reach.
 const holeIcon = 'O';  // Represents obstacles (holes) that end the game if the player encounters them.
 const fieldIcon = '░';  // Represents open fields that the player can move through.
 const playerIcon = '*';  // Represents the player's current position in the maze.
+
 // List of valid commands that the player can input to navigate through the maze.
 const validInputs = ['u', 'd', 'l', 'r'];  // Correspond to up, down, left, and right movements.
 
-const printDashLine = () => {
-    // Get the width of the terminal
-    const terminalWidth = process.stdout.columns;
-    // Create a string of dashes that matches the terminal width
-    const dashLine = '-'.repeat(terminalWidth);
-    // Print the line of dashes
-    console.log(dashLine);
-}
-
+// Text prompts and game instructions for the user on how to interact with the game in the terminal.
 const gameStartMessage = `Maze Game is a simple terminal-based game where a 
 player navigates a maze filled with hazards (holes) to find a hat. 
 The player can move up, down, left, or right with the goal of reaching 
 the hat without falling into any holes.`
-
-// Instructions for the user on how to move in the game.
 const gameInstructions = `Instructions:
 - Enter 'exit' to end the game and quit to the terminal.
 - Enter 'new' to generate a new maze with default settings.
@@ -31,8 +22,7 @@ const gameInstructions = `Instructions:
   and hole density. For example, 'new 10 10 25' generates a 10x10 maze with 25% holes.
 - Use the following keys to move around the maze:
   'u' (up), 'd' (down), 'l' (left), 'r' (right)`;
-
-const invalidInputMessage = 'Invalid input. Please try again or type "help" for instructions.';
+const invalidInputMessage = 'Invalid input. Please try again.';
 const askDirection = '\nWhich way? Enter command: ';
 
 class MazeGame {
@@ -132,17 +122,26 @@ class MazeGame {
     // Generates a new maze based on input parameters.
     // Accepts 'new' for default settings or 'new <height> <width> <holesPercentage>' for custom settings.
     handleNewCommand(params) {
-        const [height, width, holesPercentage] = params.split(' ');
-        if (params.length === 1) {
-            console.log(`Generating a new maze with default settings...`);
-            this.generateMaze(10, 10, 20);
-        } else if (height && width && holesPercentage) {
-            console.log(`Generating a new maze: ${height}x${width} with ${holesPercentage}% holes...`);
-            this.generateMaze(parseInt(height), parseInt(width), parseInt(holesPercentage));
-        } else {
-            console.log('Invalid parameters for "new" command.');
-        }
-        this.print();  // Print the newly generated maze
+        const parts = params.split(' ');
+        
+        if (parts.length === 1) {
+            // No additional parameters, generate default maze
+            this.generateMaze(10, 10, 20); // Default size and hole percentage
+        } else if (parts.length === 4) {
+            // Custom dimensions and hole percentage provided
+            const parsedHeight = parseInt(parts[1]);
+            const parsedWidth = parseInt(parts[2]);
+            const parsedHolesPercentage = parseInt(parts[3]);
+    
+            if (!isNaN(parsedHeight) && !isNaN(parsedWidth) && !isNaN(parsedHolesPercentage)) {
+                this.generateMaze(parsedHeight, parsedWidth, parsedHolesPercentage);
+            } else {
+                console.log('Invalid parameters for "new" command. Please enter valid integers.');
+                return; // Early return to avoid printing the maze if parameters are invalid
+            }
+        } 
+        
+        this.print(); // Print the newly generated maze
     }
 
 
