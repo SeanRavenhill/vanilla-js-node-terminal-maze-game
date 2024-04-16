@@ -2,29 +2,51 @@
 const prompt = require('prompt-sync')({ sigint: true });
 
 // Definitions of icons used within the game to represent different elements in the maze.
-const hatIcon = '^'; // Represents the goal (hat) the player aims to reach.
-const holeIcon = 'O'; // Represents obstacles (holes) that end the game if the player encounters them.
-const fieldIcon = '░'; // Represents open fields that the player can move through.
-const playerIcon = '*'; // Represents the player's current position in the maze.
+const hatIcon = '^';  // Represents the goal (hat) the player aims to reach.
+const holeIcon = 'O';  // Represents obstacles (holes) that end the game if the player encounters them.
+const fieldIcon = '░';  // Represents open fields that the player can move through.
+const playerIcon = '*';  // Represents the player's current position in the maze.
 // List of valid commands that the player can input to navigate through the maze.
-const validInputs = ['u', 'd', 'l', 'r']; // Correspond to up, down, left, and right movements.
+const validInputs = ['u', 'd', 'l', 'r'];  // Correspond to up, down, left, and right movements.
+
+const printDashLine = () => {
+    // Get the width of the terminal
+    const terminalWidth = process.stdout.columns;
+    // Create a string of dashes that matches the terminal width
+    const dashLine = '-'.repeat(terminalWidth);
+    // Print the line of dashes
+    console.log(dashLine);
+}
 
 const gameStartMessage = `Maze Game is a simple terminal-based game where a 
 player navigates a maze filled with hazards (holes) to find a hat. 
 The player can move up, down, left, or right with the goal of reaching 
 the hat without falling into any holes.`
 
+// Instructions for the user on how to move in the game.
+const gameInstructions = `Instructions:
+- Enter 'exit' to end the game and quit to the terminal.
+- Enter 'new' to generate a new maze with default settings.
+- Enter 'new <height> <width> <holesPercentage>' to create a custom maze with specified dimensions 
+  and hole density. For example, 'new 10 10 25' generates a 10x10 maze with 25% holes.
+- Use the following keys to move around the maze:
+  'u' (up), 'd' (down), 'l' (left), 'r' (right)`;
+
+const invalidInputMessage = 'Invalid input. Please try again or type "help" for instructions.';
+const askDirection = '\nWhich way? Enter command: ';
+
 class MazeGame {
-    constructor(fieldArray) {
-        this._fieldArray = fieldArray; // 2D array representing the game field.
-        this._gameState = true; // Boolean flag to control the ongoing state of the game.
-        this._playerCoordinates = [0, 0]; // Initial position of the player on the game field.
+    constructor(height = 10, width = 10, holesPercentage = 20) {
+        this._mazeArray = [];  // 2D array representing the game field.
+        this._gameState = true;  // Boolean flag to control the ongoing state of the game.
+        this._playerCoordinates = [0, 0];  // Initial position of the player on the game field.
+        // Generate the initial maze with default or specified parameters
+        this.generateMaze(height, width, holesPercentage);
     }
 
     // Method to generate a maze with random placements of holes, player, and the hat.
     generateMaze(height, width, holesPercentage) {
         let mazeArray = [];
-        
         // Populate the maze with holes and field spaces based on the specified percentage.
         for (let i = 0; i < height; i++) {
             let row = [];
@@ -58,7 +80,8 @@ class MazeGame {
                 break;
         }
     
-        mazeArray[playerIndexY][playerIndexX] = playerIcon; // Mark the player's position on the maze.
+        // Safe to place the player
+        mazeArray[playerIndexY][playerIndexX] = playerIcon;
     
         // Generate random coordinates for the hat, ensuring it's not placed on the player or a hole
         let hatIndexX, hatIndexY;
@@ -67,42 +90,61 @@ class MazeGame {
             hatIndexY = Math.floor(Math.random() * height);
         } while ((hatIndexX === playerIndexX && hatIndexY === playerIndexY) || mazeArray[hatIndexY][hatIndexX] === holeIcon);
     
-        mazeArray[hatIndexY][hatIndexX] = hatIcon; // Place the hat in the maze.
-        this._fieldArray = mazeArray; // Update 2D array representing the game field.
-        this._playerCoordinates = [playerIndexY, playerIndexX]; // Update initial position of the player on the game field.
+        // Safe to place the hat
+        mazeArray[hatIndexY][hatIndexX] = hatIcon;
+        this._mazeArray = mazeArray;  // Update 2D array representing the game field.
+        this._playerCoordinates = [playerIndexY, playerIndexX];  // Update initial position of the player on the game field.
     }
 
-    clearConsole() {
-        process.stdout.write('\x1Bc'); // This escape character clears the console.
-    }
-
-    // Method to print the current state of the maze with a border.
-    print() {
-        //this.clearConsole();
-        // Creates a border based on the width of the maze.
-        const border = '-'.repeat(this._fieldArray[0].length + 2);
-        // Maps each row of the field to a string and joins them with newline characters.
-        console.log(`${border}\n${this._fieldArray.map(arr => `|${arr.join('')}|`).join('\n')}\n${border}`);
-    }
-
-    // Method to capture and validate user input for movement direction.
+    // Handles user input for navigation and special commands ('exit', 'new')
+    // Exits game with 'exit', generates mazes with 'new', and accepts movement commands.
     getUserInput() {
-        // Instructions for the user on how to move in the game.
-        const gameInstructions = `Use inputs of ('u' = up), ('d' = down), ('l' = left) or ('r' = right)`;
-        const askDirection = 'Which way? ';
-        const invalidInputMessage = 'Invalid input.';
-        let direction = '';
+        // Clears the console each time to refresh the game state display
+        this.clearConsole();
+        this.print();  // Print the current state before asking for input
+    
+        process.stdout.write(gameInstructions + '\n' + askDirection);
         
-        // Loop continues until a valid input is received.
-        while (!validInputs.includes(direction)) {
-            console.log(gameInstructions);
-            direction = prompt(askDirection);
-            if (!validInputs.includes(direction)) {
-                console.log(invalidInputMessage);
+        while (true) {
+            let direction = prompt('');  // Use an empty prompt to avoid automatic new lines
+            if (validInputs.includes(direction)) return direction;  // Handle valid movement
+            if (direction === 'exit') {
+                this.handleExitCommand();
+                return;  // Exit needs to end the input loop
             }
+            if (direction.startsWith('new')) { 
+                this.handleNewCommand(direction);
+                this.print();  // Refresh the maze display after generating a new maze
+                console.log(gameInstructions);
+                process.stdout.write(askDirection);  // Continue on the same line
+                continue;  // Continue to get input
+            }
+            process.stdout.write(invalidInputMessage + '\n' + askDirection);  // Prompt again on the same line
         }
-        return direction;
     }
+
+    // Exits the game.
+    handleExitCommand() {
+        console.log('Exiting the game...');
+        process.exit();
+    }
+
+    // Generates a new maze based on input parameters.
+    // Accepts 'new' for default settings or 'new <height> <width> <holesPercentage>' for custom settings.
+    handleNewCommand(params) {
+        const [height, width, holesPercentage] = params.split(' ');
+        if (params.length === 1) {
+            console.log(`Generating a new maze with default settings...`);
+            this.generateMaze(10, 10, 20);
+        } else if (height && width && holesPercentage) {
+            console.log(`Generating a new maze: ${height}x${width} with ${holesPercentage}% holes...`);
+            this.generateMaze(parseInt(height), parseInt(width), parseInt(holesPercentage));
+        } else {
+            console.log('Invalid parameters for "new" command.');
+        }
+        this.print();  // Print the newly generated maze
+    }
+
 
     // Updates the player's position based on the input direction.
     movePlayer(direction) {
@@ -119,16 +161,16 @@ class MazeGame {
         return this._playerCoordinates;
     }
 
-    // Validates the player's new position after a move attempt.
+    // Validates the player's new position after a move attempt. 
     moveValidation(coordinates) {
         const [yIndex, xIndex] = coordinates;
         // Checks for out-of-bounds movement.
-        if (yIndex < 0 || yIndex >= this._fieldArray.length || xIndex < 0 || xIndex >= this._fieldArray[0].length) {
+        if (yIndex < 0 || yIndex >= this._mazeArray.length || xIndex < 0 || xIndex >= this._mazeArray[0].length) {
             return {valid: false, message: 'Out of Bounds! Game Over!'};
         } 
         
         // Retrieves the icon at the new position.
-        const gridSymbol = this._fieldArray[yIndex][xIndex];
+        const gridSymbol = this._mazeArray[yIndex][xIndex];
 
         // Determines the game state based on the icon.
         if (gridSymbol === holeIcon) return {valid: false, message: 'You fell in a hole! Game Over!'};
@@ -146,13 +188,29 @@ class MazeGame {
         } else {
             // If valid, updates the field with the player's new position.
             const [yIndex, xIndex] = coordinates;
-            this._fieldArray[yIndex][xIndex] = playerIcon;
+            this._mazeArray[yIndex][xIndex] = playerIcon;
         }
+    }
+
+    // Clears the console using ANSI escape code '\x1Bc', effective in most ANSI-compatible terminals.
+    // Note: adopted this approach as console.clear() may not be supported in some runtime environments.
+    clearConsole() {
+        process.stdout.write('\x1Bc'); // Send the reset and clear screen ANSI escape sequence to stdout.
+    }
+
+    // Method to print the current state of the maze with a border.
+    print() {
+        this.clearConsole();
+        // Creates a border based on the width of the maze.
+        const border = '-'.repeat(this._mazeArray[0].length + 2);
+        // Prints the game introduction.
+        console.log(gameStartMessage);
+        // Maps each row of the field to a string and joins them with newline characters.
+        console.log(`${border}\n${this._mazeArray.map(arr => `|${arr.join('')}|`).join('\n')}\n${border}`);
     }
 
     // Main game loop.
     playGame() {
-        console.log(gameStartMessage);
         while (this._gameState) {
             this.print();
             const direction = this.getUserInput();
@@ -163,9 +221,6 @@ class MazeGame {
     } 
 }
 
-
 // Example of generating and playing the game.
-
-const testGame = new MazeGame([]);
-testGame.generateMaze(10, 10, 15); // Generates a 10x10 maze with 15% holes.
+const testGame = new MazeGame();
 testGame.playGame();
